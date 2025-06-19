@@ -6,6 +6,7 @@ import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {FoodCard} from "./food-card";
 import type {FoodItem} from "../types/food";
+import {motion, AnimatePresence} from "framer-motion";
 
 interface SearchResultsModalProps {
 	isOpen: boolean;
@@ -16,6 +17,18 @@ interface SearchResultsModalProps {
 	onSearch: (query: string) => Promise<void>;
 	initialQuery?: string;
 }
+
+const overlayVariants = {
+	hidden: {opacity: 0, backdropFilter: "blur(0px)"},
+	visible: {opacity: 1, backdropFilter: "blur(8px)"},
+	exit: {opacity: 0, backdropFilter: "blur(0px)"},
+};
+
+const modalVariants = {
+	hidden: {opacity: 0, y: 60, scale: 0.96},
+	visible: {opacity: 1, y: 0, scale: 1, transition: {type: "spring", stiffness: 300, damping: 30}},
+	exit: {opacity: 0, y: 60, scale: 0.96, transition: {duration: 0.2}},
+};
 
 export default function SearchResultsModal({isOpen, onClose, searchResults, loading, error, onSearch, initialQuery = ""}: SearchResultsModalProps) {
 	const [searchQuery, setSearchQuery] = useState(initialQuery);
@@ -61,134 +74,175 @@ export default function SearchResultsModal({isOpen, onClose, searchResults, load
 		// Handle delete functionality
 	};
 
-	if (!isOpen) return null;
-
 	return (
-		<div className='fixed inset-0 z-50 bg-black/50 backdrop-blur-sm'>
-			<div className='fixed inset-0 z-50 flex items-center justify-center p-4'>
-				<div className='bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden'>
-					{/* Header */}
-					<div className='flex items-center justify-between p-6 border-b border-gray-200'>
-						<div className='flex items-center gap-4'>
-							<button
+		<AnimatePresence>
+			{isOpen && (
+				<motion.div
+					key='overlay'
+					initial='hidden'
+					animate='visible'
+					exit='exit'
+					variants={overlayVariants}
+					transition={{duration: 0.35, ease: "easeInOut"}}
+					className='fixed inset-0 z-50 bg-black/40 backdrop-blur-lg flex items-center justify-center'
+					onClick={onClose}
+					style={{WebkitBackdropFilter: "blur(8px)", backdropFilter: "blur(8px)"}}
+				>
+					<motion.div
+						key='modal'
+						initial='hidden'
+						animate='visible'
+						exit='exit'
+						variants={modalVariants}
+						className='relative w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden shadow-2xl rounded-3xl border border-white/20 bg-white/70 dark:bg-zinc-900/80 backdrop-blur-xl'
+						onClick={(e) => e.stopPropagation()}
+						style={{boxShadow: "0 8px 40px 0 rgba(0,0,0,0.18)"}}
+					>
+						{/* Header */}
+						<div className='flex items-center justify-between p-6 border-b border-white/20 bg-white/60 dark:bg-zinc-900/70 backdrop-blur-xl'>
+							<div className='flex items-center gap-4'>
+								<motion.button
+									whileHover={{scale: 1.08}}
+									whileTap={{scale: 0.95}}
+									onClick={onClose}
+									className='p-2 hover:bg-orange-100 dark:hover:bg-zinc-800 rounded-full transition-colors'
+								>
+									<ArrowLeft className='h-5 w-5 text-gray-700 dark:text-gray-200' />
+								</motion.button>
+								<div>
+									<h2 className='text-2xl font-bold text-gray-900 dark:text-white'>Search Results</h2>
+									<p className='text-sm text-gray-600 dark:text-gray-300'>
+										{searchResults.length > 0
+											? `Found ${searchResults.length} meal${searchResults.length !== 1 ? "s" : ""}`
+											: "Search for delicious meals"}
+									</p>
+								</div>
+							</div>
+							<motion.button
+								whileHover={{scale: 1.08}}
+								whileTap={{scale: 0.95}}
 								onClick={onClose}
-								className='p-2 hover:bg-gray-100 rounded-full transition-colors'
+								className='p-2 hover:bg-orange-100 dark:hover:bg-zinc-800 rounded-full transition-colors'
 							>
-								<ArrowLeft className='h-5 w-5 text-gray-600' />
-							</button>
-							<div>
-								<h2 className='text-2xl font-bold text-gray-900'>Search Results</h2>
-								<p className='text-sm text-gray-600'>
-									{searchResults.length > 0
-										? `Found ${searchResults.length} meal${searchResults.length !== 1 ? "s" : ""}`
-										: "Search for delicious meals"}
-								</p>
-							</div>
+								<X className='h-5 w-5 text-gray-700 dark:text-gray-200' />
+							</motion.button>
 						</div>
-						<button
-							onClick={onClose}
-							className='p-2 hover:bg-gray-100 rounded-full transition-colors'
-						>
-							<X className='h-5 w-5 text-gray-600' />
-						</button>
-					</div>
 
-					{/* Search Bar */}
-					<div className='p-6 border-b border-gray-200'>
-						<form
-							onSubmit={handleSearch}
-							className='flex gap-3'
-						>
-							<div className='relative flex-1'>
-								<Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4' />
-								<Input
-									type='text'
-									placeholder='Search for meals...'
-									value={searchQuery}
-									onChange={(e) => setSearchQuery(e.target.value)}
-									className='pl-10 pr-4 h-12 text-lg'
-								/>
-							</div>
-							<Button
-								type='submit'
-								disabled={isSearching || !searchQuery.trim()}
-								className='bg-orange-500 hover:bg-orange-600 text-white px-8 h-12 disabled:opacity-50 disabled:cursor-not-allowed'
+						{/* Search Bar */}
+						<div className='p-6 border-b border-white/20 bg-white/60 dark:bg-zinc-900/70 backdrop-blur-xl'>
+							<form
+								onSubmit={handleSearch}
+								className='flex gap-3'
 							>
-								{isSearching ? "Searching..." : "Search"}
-							</Button>
-						</form>
-					</div>
-
-					{/* Content */}
-					<div className='flex-1 overflow-y-auto p-6'>
-						{loading && (
-							<div className='flex flex-col items-center justify-center h-full'>
-								<div className='animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500'></div>
-								<p className='text-gray-600 mt-4 text-lg'>Searching for meals...</p>
-							</div>
-						)}
-
-						{error && (
-							<div className='flex flex-col items-center justify-center h-full'>
-								<div className='text-center max-w-md'>
-									<p className='text-red-600 text-lg mb-4'>{error}</p>
+								<div className='relative flex-1'>
+									<Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4' />
+									<Input
+										type='text'
+										placeholder='Search for meals...'
+										value={searchQuery}
+										onChange={(e) => setSearchQuery(e.target.value)}
+										className='pl-10 pr-4 h-12 text-lg bg-white/80 dark:bg-zinc-900/80 border border-white/30 dark:border-zinc-800 rounded-xl shadow-sm focus:ring-orange-500 focus:border-orange-500'
+									/>
+								</div>
+								<motion.div
+									whileHover={{scale: 1.04}}
+									whileTap={{scale: 0.98}}
+								>
 									<Button
-										onClick={() => onSearch(searchQuery)}
-										className='bg-orange-500 hover:bg-orange-600 text-white'
+										type='submit'
+										disabled={isSearching || !searchQuery.trim()}
+										className='bg-orange-500 hover:bg-orange-600 text-white px-8 h-12 rounded-xl shadow-md disabled:opacity-50 disabled:cursor-not-allowed'
 									>
-										Try Again
+										{isSearching ? "Searching..." : "Search"}
 									</Button>
-								</div>
-							</div>
-						)}
+								</motion.div>
+							</form>
+						</div>
 
-						{!loading && !error && searchResults.length === 0 && searchQuery && (
-							<div className='flex flex-col items-center justify-center h-full'>
-								<div className='text-center max-w-md'>
-									<div className='w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4'>
-										<Search className='h-8 w-8 text-gray-400' />
-									</div>
-									<h3 className='text-xl font-semibold text-gray-900 mb-2'>No meals found</h3>
-									<p className='text-gray-600 mb-4'>We couldn't find any meals matching "{searchQuery}"</p>
-									<p className='text-sm text-gray-500'>Try searching with different keywords or check your spelling</p>
+						{/* Content */}
+						<div className='flex-1 overflow-y-auto p-6 bg-white/70 dark:bg-zinc-900/80'>
+							{loading && (
+								<div className='flex flex-col items-center justify-center h-full'>
+									<div className='animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500'></div>
+									<p className='text-gray-600 dark:text-gray-300 mt-4 text-lg'>Searching for meals...</p>
 								</div>
-							</div>
-						)}
+							)}
 
-						{!loading && !error && searchResults.length > 0 && (
-							<div className='space-y-6'>
-								<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-									{searchResults.map((meal) => (
-										<div
-											key={meal.id}
-											className='transition-all duration-300 hover:scale-105'
+							{error && (
+								<div className='flex flex-col items-center justify-center h-full'>
+									<div className='text-center max-w-md'>
+										<p className='text-red-600 text-lg mb-4'>{error}</p>
+										<motion.div
+											whileHover={{scale: 1.05}}
+											whileTap={{scale: 0.95}}
 										>
-											<FoodCard
-												item={meal}
-												onCardClick={handleCardClick}
-												onEdit={handleEdit}
-												onDelete={handleDelete}
-											/>
-										</div>
-									))}
-								</div>
-							</div>
-						)}
-
-						{!loading && !error && !searchQuery && (
-							<div className='flex flex-col items-center justify-center h-full'>
-								<div className='text-center max-w-md'>
-									<div className='w-24 h-24 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4'>
-										<Search className='h-8 w-8 text-orange-500' />
+											<Button
+												onClick={() => onSearch(searchQuery)}
+												className='bg-orange-500 hover:bg-orange-600 text-white'
+											>
+												Try Again
+											</Button>
+										</motion.div>
 									</div>
-									<h3 className='text-xl font-semibold text-gray-900 mb-2'>Search for meals</h3>
-									<p className='text-gray-600'>Enter a meal name above to discover delicious options</p>
 								</div>
-							</div>
-						)}
-					</div>
-				</div>
-			</div>
-		</div>
+							)}
+
+							{!loading && !error && searchResults.length === 0 && searchQuery && (
+								<div className='flex flex-col items-center justify-center h-full'>
+									<div className='text-center max-w-md'>
+										<div className='w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4'>
+											<Search className='h-8 w-8 text-gray-400' />
+										</div>
+										<h3 className='text-xl font-semibold text-gray-900 dark:text-white mb-2'>No meals found</h3>
+										<p className='text-gray-600 dark:text-gray-300 mb-4'>We couldn't find any meals matching "{searchQuery}"</p>
+										<p className='text-sm text-gray-500'>Try searching with different keywords or check your spelling</p>
+									</div>
+								</div>
+							)}
+
+							{!loading && !error && searchResults.length > 0 && (
+								<div className='space-y-6'>
+									<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+										{searchResults.map((meal, index) => (
+											<motion.div
+												key={meal.id}
+												initial={{opacity: 0, y: 20, scale: 0.9}}
+												animate={{opacity: 1, y: 0, scale: 1}}
+												transition={{
+													duration: 0.4,
+													delay: 0.1 + index * 0.07,
+													ease: [0.25, 0.46, 0.45, 0.94],
+												}}
+												whileHover={{scale: 1.04, y: -4}}
+												className='transition-all duration-300'
+											>
+												<FoodCard
+													item={meal}
+													onCardClick={handleCardClick}
+													onEdit={handleEdit}
+													onDelete={handleDelete}
+												/>
+											</motion.div>
+										))}
+									</div>
+								</div>
+							)}
+
+							{!loading && !error && !searchQuery && (
+								<div className='flex flex-col items-center justify-center h-full'>
+									<div className='text-center max-w-md'>
+										<div className='w-24 h-24 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4'>
+											<Search className='h-8 w-8 text-orange-500' />
+										</div>
+										<h3 className='text-xl font-semibold text-gray-900 dark:text-white mb-2'>Search for meals</h3>
+										<p className='text-gray-600 dark:text-gray-300'>Enter a meal name above to discover delicious options</p>
+									</div>
+								</div>
+							)}
+						</div>
+					</motion.div>
+				</motion.div>
+			)}
+		</AnimatePresence>
 	);
 }
