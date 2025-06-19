@@ -6,6 +6,7 @@ import {FoodCard} from "./food-card";
 import {useFeaturedFoods} from "@/lib/hooks/useFeaturedFoods";
 import type {FoodItem} from "../types/food";
 import AddOrEditMealModal from "./add-meal-modal";
+import {Loader2} from "lucide-react";
 
 interface FeaturedMealsProps {
 	title?: string;
@@ -32,6 +33,7 @@ function MealCardSkeleton() {
 
 export function FeaturedMeals({title = "Featured Meals", itemsPerPage = 8, limit = 12}: FeaturedMealsProps) {
 	const [displayedItems, setDisplayedItems] = useState(itemsPerPage);
+	const [loadMoreLoading, setLoadMoreLoading] = useState(false);
 	const {foods, loading, error, refetch} = useFeaturedFoods(limit);
 
 	// Modal state for add/edit
@@ -40,8 +42,14 @@ export function FeaturedMeals({title = "Featured Meals", itemsPerPage = 8, limit
 	const [editInitialValues, setEditInitialValues] = useState<any>(undefined);
 	const [editId, setEditId] = useState<string | null>(null);
 
-	const handleLoadMore = () => {
+	const handleLoadMore = async () => {
+		setLoadMoreLoading(true);
+
+		// Simulate loading time for smooth UX (remove this if you implement real pagination)
+		await new Promise((resolve) => setTimeout(resolve, 800));
+
 		setDisplayedItems((prev) => prev + itemsPerPage);
+		setLoadMoreLoading(false);
 	};
 
 	const handleCardClick = (item: FoodItem) => {
@@ -134,14 +142,23 @@ export function FeaturedMeals({title = "Featured Meals", itemsPerPage = 8, limit
 				{!loading && foods.length > 0 && (
 					<>
 						<div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8'>
-							{visibleMeals.map((meal) => (
-								<FoodCard
+							{visibleMeals.map((meal, index) => (
+								<div
 									key={meal.id}
-									item={meal}
-									onCardClick={handleCardClick}
-									onEdit={handleEdit}
-									onDelete={handleDelete}
-								/>
+									className={`transition-all duration-500 ease-out ${
+										index >= displayedItems - itemsPerPage && index < displayedItems ? "animate-in fade-in slide-in-from-bottom-4" : ""
+									}`}
+									style={{
+										animationDelay: `${(index % itemsPerPage) * 100}ms`,
+									}}
+								>
+									<FoodCard
+										item={meal}
+										onCardClick={handleCardClick}
+										onEdit={handleEdit}
+										onDelete={handleDelete}
+									/>
+								</div>
 							))}
 						</div>
 
@@ -150,9 +167,17 @@ export function FeaturedMeals({title = "Featured Meals", itemsPerPage = 8, limit
 							<div className='text-center'>
 								<Button
 									onClick={handleLoadMore}
-									className='bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-full font-semibold'
+									disabled={loadMoreLoading}
+									className='bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-full font-semibold transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed'
 								>
-									Load More
+									{loadMoreLoading ? (
+										<>
+											<Loader2 className='mr-2 h-4 w-4 animate-spin' />
+											Loading...
+										</>
+									) : (
+										"Load More"
+									)}
 								</Button>
 							</div>
 						)}

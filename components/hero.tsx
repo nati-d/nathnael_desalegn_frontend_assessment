@@ -3,19 +3,33 @@
 import type React from "react";
 
 import {useState} from "react";
-import {Search, Bike, ShoppingBag} from "lucide-react";
+import {Search, Bike, ShoppingBag, X} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Tabs, TabsList, TabsTrigger} from "@/components/ui/tabs";
+import {useSearchFoods} from "@/lib/hooks/useSearchFoods";
+import SearchResultsModal from "./search-results-modal";
 
 export default function Hero() {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [activeTab, setActiveTab] = useState("delivery");
+	const [showModal, setShowModal] = useState(false);
+	const {searchResults, loading, error, searchFoods} = useSearchFoods();
 
-	const handleSearch = (e: React.FormEvent) => {
+	const handleSearch = async (e: React.FormEvent) => {
 		e.preventDefault();
-		console.log("Searching for:", searchQuery);
-		// Handle search logic here
+		if (!searchQuery.trim()) return;
+
+		setShowModal(true);
+		await searchFoods(searchQuery);
+	};
+
+	const handleModalSearch = async (query: string) => {
+		await searchFoods(query);
+	};
+
+	const clearSearch = () => {
+		setSearchQuery("");
 	};
 
 	return (
@@ -65,14 +79,24 @@ export default function Hero() {
 										placeholder='What do you like to eat today...'
 										value={searchQuery}
 										onChange={(e) => setSearchQuery(e.target.value)}
-										className='pl-10 border-gray-200 focus:border-orange-500 focus:ring-orange-500 text-black'
+										className='pl-10 pr-10 border-gray-200 focus:border-orange-500 focus:ring-orange-500 text-black'
 									/>
+									{searchQuery && (
+										<button
+											type='button'
+											onClick={clearSearch}
+											className='absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600'
+										>
+											<X className='h-4 w-4' />
+										</button>
+									)}
 								</div>
 								<Button
 									type='submit'
-									className='bg-orange-500 hover:bg-orange-600 text-white px-6 whitespace-nowrap'
+									disabled={loading || !searchQuery.trim()}
+									className='bg-orange-500 hover:bg-orange-600 text-white px-6 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed'
 								>
-									Find Meal
+									{loading ? "Searching..." : "Find Meal"}
 								</Button>
 							</form>
 						</div>
@@ -101,6 +125,17 @@ export default function Hero() {
 			<div className='absolute top-10 right-10 w-20 h-20 bg-white rounded-full opacity-5'></div>
 			<div className='absolute bottom-20 left-10 w-16 h-16 bg-white rounded-full opacity-5'></div>
 			<div className='absolute top-1/2 left-1/4 w-4 h-4 bg-white rounded-full opacity-10'></div>
+
+			{/* Search Results Modal */}
+			<SearchResultsModal
+				isOpen={showModal}
+				onClose={() => setShowModal(false)}
+				searchResults={searchResults}
+				loading={loading}
+				error={error}
+				onSearch={handleModalSearch}
+				initialQuery={searchQuery}
+			/>
 		</section>
 	);
 }
