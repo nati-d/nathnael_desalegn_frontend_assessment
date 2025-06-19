@@ -1,10 +1,11 @@
+import {FeaturedMeals} from "@/components/featured-meals";
 import Hero from "@/components/hero";
-import Image from "next/image";
 
 export default function Home() {
-  return (
-    <>
-    <Hero />
-    </>
-  );
+	return (
+		<>
+			<Hero />
+			<FeaturedMeals />
+		</>
+	);
 }
