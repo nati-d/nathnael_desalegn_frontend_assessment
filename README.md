@@ -259,42 +259,10 @@ interface FoodItem {
 -   Icon library integration
 -   TypeScript support
 
-### Next.js
 
--   App Router configuration
--   Turbopack for development
--   TypeScript strict mode
--   ESLint configuration
 
-## 🚀 Deployment
 
-### Vercel (Recommended)
 
-1. Connect your GitHub repository to Vercel
-2. Set environment variables in Vercel dashboard
-3. Deploy automatically on push to main branch
-
-### Other Platforms
-
--   **Netlify**: Compatible with Next.js static export
--   **Railway**: Full-stack deployment support
--   **Docker**: Containerized deployment available
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-### Development Guidelines
-
--   Follow TypeScript best practices
--   Use conventional commit messages
--   Maintain component reusability
--   Add proper error handling
--   Write meaningful comments
 
 ## 📄 License
 
