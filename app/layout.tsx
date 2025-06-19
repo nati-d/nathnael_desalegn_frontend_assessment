@@ -1,6 +1,7 @@
 import type {Metadata} from "next";
 import "./globals.css";
 import Navbar from "@/components/navbar";
+import Footer from "@/components/footer";
 
 export const metadata: Metadata = {
 	title: "FoodWagon - Delicious Food Delivered",
@@ -17,6 +18,7 @@ export default function RootLayout({
 			<body className={`antialiased`}>
 				<Navbar />
 				<main>{children}</main>
+				<Footer />
 			</body>
 		</html>
 	);

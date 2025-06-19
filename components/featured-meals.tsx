@@ -13,6 +13,23 @@ interface FeaturedMealsProps {
 	limit?: number;
 }
 
+// Add a simple skeleton card component
+function MealCardSkeleton() {
+	return (
+		<div className='rounded-lg bg-white shadow-sm animate-pulse overflow-hidden'>
+			<div className='aspect-[4/3] bg-gray-200' />
+			<div className='p-4 space-y-2'>
+				<div className='h-4 bg-gray-200 rounded w-2/3' />
+				<div className='h-3 bg-gray-100 rounded w-1/3' />
+				<div className='flex space-x-2 mt-2'>
+					<div className='h-3 w-8 bg-gray-100 rounded' />
+					<div className='h-3 w-8 bg-gray-100 rounded' />
+				</div>
+			</div>
+		</div>
+	);
+}
+
 export function FeaturedMeals({title = "Featured Meals", itemsPerPage = 8, limit = 12}: FeaturedMealsProps) {
 	const [displayedItems, setDisplayedItems] = useState(itemsPerPage);
 	const {foods, loading, error, refetch} = useFeaturedFoods(limit);
@@ -65,6 +82,14 @@ export function FeaturedMeals({title = "Featured Meals", itemsPerPage = 8, limit
 		refetch();
 	};
 
+	const handleDelete = async (meal: FoodItem) => {
+		if (!window.confirm(`Are you sure you want to delete "${meal.name}"?`)) return;
+		await fetch(`https://6852821e0594059b23cdd834.mockapi.io/Food/${meal.id}`, {
+			method: "DELETE",
+		});
+		refetch();
+	};
+
 	const visibleMeals = foods.slice(0, displayedItems);
 	const showLoadMore = displayedItems < foods.length;
 
@@ -98,9 +123,10 @@ export function FeaturedMeals({title = "Featured Meals", itemsPerPage = 8, limit
 
 				{/* Loading State */}
 				{loading && (
-					<div className='text-center py-12'>
-						<div className='inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500'></div>
-						<p className='mt-2 text-gray-600'>Loading featured meals...</p>
+					<div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8'>
+						{Array.from({length: 8}).map((_, i) => (
+							<MealCardSkeleton key={i} />
+						))}
 					</div>
 				)}
 
@@ -114,6 +140,7 @@ export function FeaturedMeals({title = "Featured Meals", itemsPerPage = 8, limit
 									item={meal}
 									onCardClick={handleCardClick}
 									onEdit={handleEdit}
+									onDelete={handleDelete}
 								/>
 							))}
 						</div>
