@@ -1,16 +1,19 @@
 "use client";
 
-import {Star, MoreHorizontal} from "lucide-react";
+import {Star, MoreVertical} from "lucide-react";
 import {CardContent} from "@/components/ui/card";
 import {Badge} from "@/components/ui/badge";
+import {DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem} from "@/components/ui/dropdown-menu";
 import type {FoodItem} from "../types/food";
 
 interface FoodCardProps {
 	item: FoodItem;
 	onCardClick?: (item: FoodItem) => void;
+	onEdit?: (item: FoodItem) => void;
+	onDelete?: (item: FoodItem) => void;
 }
 
-export function FoodCard({item, onCardClick}: FoodCardProps) {
+export function FoodCard({item, onCardClick, onEdit, onDelete}: FoodCardProps) {
 	const handleClick = () => {
 		onCardClick?.(item);
 	};
@@ -66,9 +69,35 @@ export function FoodCard({item, onCardClick}: FoodCardProps) {
 								</div>
 							</div>
 						</div>
-						<button className='text-gray-400 hover:text-gray-600 p-1'>
-							<MoreHorizontal className='h-4 w-4' />
-						</button>
+						{/* Dropdown menu for edit/delete */}
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<button
+									className='text-gray-400 hover:text-gray-600 p-1'
+									onClick={(e) => e.stopPropagation()}
+								>
+									<MoreVertical className='h-4 w-4' />
+								</button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align='end'>
+								<DropdownMenuItem
+									onClick={(e) => {
+										e.stopPropagation();
+										onEdit?.(item);
+									}}
+								>
+									Edit
+								</DropdownMenuItem>
+								<DropdownMenuItem
+									onClick={(e) => {
+										e.stopPropagation();
+										onDelete?.(item);
+									}}
+								>
+									Delete
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
 					</div>
 
 					{/* Status */}

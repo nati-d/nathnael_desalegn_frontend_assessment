@@ -5,6 +5,7 @@ import {Button} from "@/components/ui/button";
 import {FoodCard} from "./food-card";
 import {useFeaturedFoods} from "@/lib/hooks/useFeaturedFoods";
 import type {FoodItem} from "../types/food";
+import AddOrEditMealModal from "./add-meal-modal";
 
 interface FeaturedMealsProps {
 	title?: string;
@@ -16,6 +17,12 @@ export function FeaturedMeals({title = "Featured Meals", itemsPerPage = 8, limit
 	const [displayedItems, setDisplayedItems] = useState(itemsPerPage);
 	const {foods, loading, error, refetch} = useFeaturedFoods(limit);
 
+	// Modal state for add/edit
+	const [modalOpen, setModalOpen] = useState(false);
+	const [modalMode, setModalMode] = useState<"add" | "edit">("add");
+	const [editInitialValues, setEditInitialValues] = useState<any>(undefined);
+	const [editId, setEditId] = useState<string | null>(null);
+
 	const handleLoadMore = () => {
 		setDisplayedItems((prev) => prev + itemsPerPage);
 	};
@@ -23,6 +30,39 @@ export function FeaturedMeals({title = "Featured Meals", itemsPerPage = 8, limit
 	const handleCardClick = (item: FoodItem) => {
 		console.log("Food item clicked:", item);
 		// Handle navigation to food detail page
+	};
+
+	const handleEdit = (meal: FoodItem) => {
+		setModalMode("edit");
+		setEditId(meal.id);
+		setEditInitialValues({
+			name: meal.name,
+			price: meal.price.toString(),
+			image: meal.image,
+			restaurant: meal.restaurant.name,
+			logo: meal.restaurant.logo,
+			status: meal.restaurant.isOpen ? "Open" : "Closed",
+		});
+		setModalOpen(true);
+	};
+
+	const handleEditSubmit = async (values: any) => {
+		if (!editId) return;
+		await fetch(`https://6852821e0594059b23cdd834.mockapi.io/Food/${editId}`, {
+			method: "PUT",
+			headers: {"Content-Type": "application/json"},
+			body: JSON.stringify({
+				name: values.name,
+				Price: values.price,
+				avatar: values.image,
+				restaurant_name: values.restaurant,
+				logo: values.logo,
+				open: values.status === "Open",
+			}),
+		});
+		setModalOpen(false);
+		setEditId(null);
+		refetch();
 	};
 
 	const visibleMeals = foods.slice(0, displayedItems);
@@ -73,6 +113,7 @@ export function FeaturedMeals({title = "Featured Meals", itemsPerPage = 8, limit
 									key={meal.id}
 									item={meal}
 									onCardClick={handleCardClick}
+									onEdit={handleEdit}
 								/>
 							))}
 						</div>
@@ -103,6 +144,15 @@ export function FeaturedMeals({title = "Featured Meals", itemsPerPage = 8, limit
 						</Button>
 					</div>
 				)}
+
+				{/* Edit Modal */}
+				<AddOrEditMealModal
+					open={modalOpen}
+					onOpenChange={setModalOpen}
+					mode={modalMode}
+					initialValues={editInitialValues}
+					onSubmit={handleEditSubmit}
+				/>
 			</div>
 		</section>
 	);
